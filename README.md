@@ -1,4 +1,5 @@
 # RichLog
+![SS_2024-11-19_at_13-43-22](https://github.com/user-attachments/assets/65671ba9-46ce-4963-81c0-dcdbade1d3a7)
 
 RichLog is a Python library for enhanced logging using the rich capabilities of the `rich` library. It facilitates the setup of visually appealing and highly configurable logging for various levels, from simple messages to detailed debugging information complete with timestamps and code paths.
 
