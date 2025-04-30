@@ -6,7 +6,7 @@ from time import sleep
 from rich import print
 from rich.panel import Panel
 
-from richlog import get_rich_logger, LogFormat, DateFormat
+from richlog import DateFormat, LogFormat, get_rich_logger
 
 
 def display_intro():

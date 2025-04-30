@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 from rich.logging import RichHandler
 
@@ -40,11 +40,9 @@ def get_rich_logger(
 ) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(level)
-
     # Clear existing handlers to ensure no duplicates
     if logger.hasHandlers():
         logger.handlers.clear()
-
     handler = RichHandler(
         show_time=True,
         show_level=True,
@@ -54,9 +52,7 @@ def get_rich_logger(
         tracebacks_suppress=traceback_suppress or [],
     )
     handler.setLevel(level)
-
     formatter = logging.Formatter(log_format, datefmt=date_format)
     handler.setFormatter(formatter)
-
     logger.addHandler(handler)
     return logger
