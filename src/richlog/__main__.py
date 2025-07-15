@@ -12,6 +12,7 @@ import logging
 import os
 import tempfile
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from rich.console import Console
@@ -81,8 +82,6 @@ def demo_basic_formats():
     date_table.add_column("Format", style="cyan")
     date_table.add_column("Pattern")
     date_table.add_column("Example")
-
-    from datetime import datetime
 
     now = datetime.now()
 
@@ -226,7 +225,21 @@ def demo_handlers():
 
         # Buffered handler
         console.print("\n[bold]4. Buffered Handler:[/bold]")
-        buffered_json = BufferedHandler(JSONHandler(), buffer_size=5)
+        # Create a proper JSON handler with StreamHandler as base
+        json_stream_handler = logging.StreamHandler()
+        json_stream_handler.setFormatter(logging.Formatter())
+
+        class WorkingJSONHandler(logging.StreamHandler):
+            def format(self, record):
+                log_data = {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "level": record.levelname,
+                    "message": record.getMessage(),
+                }
+                return json.dumps(log_data)
+
+        working_json = WorkingJSONHandler()
+        buffered_json = BufferedHandler(working_json, buffer_size=5)
         buffer_logger = logging.getLogger("buffer_demo")
         buffer_logger.setLevel(DEBUG)
         buffer_logger.addHandler(buffered_json)
