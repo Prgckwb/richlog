@@ -9,13 +9,14 @@ RichLog is a powerful Python logging library that enhances your logging experien
 ## Features
 
 - 🎨 **Beautiful Console Output** - Colorful, formatted logs using the `rich` library
-- 📝 **Multiple Log Formats** - Simple, verbose, detailed, and custom formats
+- 📝 **Multiple Log Formats** - Simple, verbose, detailed, and custom formats with type-safe Enums
 - 📅 **Flexible Date Formatting** - ISO8601, US, EU, and custom date formats
 - 🔧 **Advanced Handlers** - File rotation, JSON output, async logging, and buffered logging
-- ⚙️ **Configuration Management** - Environment variables and config file support
+- ⚙️ **Configuration Management** - Environment variables and config file support with validation
 - 🎯 **Useful Decorators** - Log execution time and catch errors automatically
 - 🔄 **Context Managers** - Temporarily change log levels within code blocks
 - 🚀 **Production Ready** - Type hints, comprehensive tests, and CI/CD pipeline
+- ⚡ **Easy Setup** - Quick start with presets and shortcuts
 
 ## Installation
 
@@ -33,19 +34,29 @@ uv pip install git+https://github.com/prgckwb/richlog.git
 
 ## Quick Start
 
+### The Simplest Way
+
+```python
+from richlog import setup_rich_logger
+
+# Quick setup with presets
+logger = setup_rich_logger("myapp", preset="production")
+logger.info("Application started!")
+```
+
 ### Basic Usage
 
 ```python
-from richlog import get_rich_logger, LogFormat, DateFormat
+from richlog import get_rich_logger, LogFormat, DateFormat, INFO
 
 # Create a simple logger
 logger = get_rich_logger("my_app")
 logger.info("Hello, RichLog!")
 
-# Create a detailed logger with custom formatting
+# Create a detailed logger with Enum-based configuration
 logger = get_rich_logger(
     name="detailed_app",
-    level=logging.DEBUG,
+    level=INFO,
     log_format=LogFormat.DETAILED,
     date_format=DateFormat.ISO8601
 )
@@ -56,10 +67,50 @@ logger.warning("This is a warning")
 logger.error("An error occurred")
 ```
 
-### Advanced Handlers
+### Using Configuration Files
 
 ```python
-from richlog.core.handlers import FileHandler, JSONHandler, AsyncHandler, BufferedHandler
+from richlog import load_settings
+
+# Load from configuration file and create logger
+settings = load_settings(Path("richlog.toml"))
+logger = settings.create_logger("myapp")
+
+# Or use environment variables
+# RICHLOG_LEVEL=DEBUG
+# RICHLOG_FORMAT=DETAILED
+logger = load_settings().create_logger("myapp")
+```
+
+### Shortcuts for Common Patterns
+
+```python
+from richlog import setup_file_logger, setup_json_logger
+
+# File logger with rotation
+file_logger = setup_file_logger(
+    "myapp",
+    filename="app.log",
+    max_bytes=10_000_000,  # 10MB
+    backup_count=5
+)
+
+# JSON logger for structured logging
+json_logger = setup_json_logger(
+    "myapp",
+    buffered=True,
+    buffer_size=100
+)
+```
+
+## Advanced Features
+
+### Handlers
+
+```python
+from richlog import FileHandler, JSONHandler, AsyncHandler, BufferedHandler
+
+logger = get_rich_logger("my_app")
 
 # File handler with rotation
 file_handler = FileHandler(
@@ -67,28 +118,28 @@ file_handler = FileHandler(
     max_bytes=10_000_000,  # 10MB
     backup_count=5
 )
+logger.addHandler(file_handler)
 
 # JSON handler for structured logging
 json_handler = JSONHandler()
+logger.addHandler(json_handler)
 
 # Async handler for non-blocking logging
 async_handler = AsyncHandler(base_handler=file_handler)
+logger.addHandler(async_handler)
 
 # Buffered handler for batch processing
 buffered_handler = BufferedHandler(
     base_handler=json_handler,
     buffer_size=100
 )
-
-# Add handlers to your logger
-logger = get_rich_logger("my_app")
-logger.addHandler(json_handler)
+logger.addHandler(buffered_handler)
 ```
 
 ### Decorators
 
 ```python
-from richlog.utils.decorators import log_execution_time, log_errors
+from richlog import log_execution_time, log_errors
 
 logger = get_rich_logger("my_app")
 
@@ -106,13 +157,12 @@ def risky_function():
 ### Context Manager
 
 ```python
-from richlog.utils.context import log_context
-import logging
+from richlog import log_context, INFO, DEBUG
 
-logger = get_rich_logger("my_app", level=logging.INFO)
+logger = get_rich_logger("my_app", level=INFO)
 
 # Temporarily enable debug logging
-with log_context(logger, level=logging.DEBUG):
+with log_context(logger, level=DEBUG):
     logger.debug("This debug message will be shown")
     
 logger.debug("This debug message will NOT be shown")
@@ -120,7 +170,7 @@ logger.debug("This debug message will NOT be shown")
 
 ## Configuration
 
-RichLog supports multiple configuration methods:
+RichLog supports multiple configuration methods with validation:
 
 ### Environment Variables
 
@@ -129,22 +179,12 @@ export RICHLOG_LEVEL=DEBUG
 export RICHLOG_FORMAT=DETAILED
 export RICHLOG_DATE_FORMAT=ISO8601
 export RICHLOG_RICH_TRACEBACKS=true
-export RICHLOG_TRACEBACK_SUPPRESS=module1,module2
+export RICHLOG_TRACEBACK_SUPPRESS=pandas,numpy
 ```
 
 ### Configuration Files
 
 Create a `.richlogrc` or `richlog.toml` file:
-
-**INI format (.richlogrc):**
-```ini
-[richlog]
-level = INFO
-format = VERBOSE
-date_format = ISO8601
-rich_tracebacks = true
-traceback_suppress = pandas,numpy
-```
 
 **TOML format (richlog.toml):**
 ```toml
@@ -156,43 +196,67 @@ rich_tracebacks = true
 traceback_suppress = ["pandas", "numpy"]
 ```
 
-### Loading Configuration
+**INI format (.richlogrc):**
+```ini
+[richlog]
+level = INFO
+format = VERBOSE
+date_format = ISO8601
+rich_tracebacks = true
+traceback_suppress = pandas,numpy
+```
+
+### Programmatic Configuration
 
 ```python
-from richlog.config.settings import load_settings
-from richlog import get_rich_logger
+from richlog import Settings, ConfigError
 
-# Load settings from file and environment
-settings = load_settings(config_path=Path(".richlogrc"))
-
-# Create logger with settings
-logger = get_rich_logger(
-    "my_app",
-    level=settings.get_log_level(),
-    log_format=settings.format,
-    date_format=settings.date_format,
-    rich_tracebacks=settings.rich_tracebacks,
-    traceback_suppress=settings.traceback_suppress
-)
+try:
+    settings = Settings(
+        level="DEBUG",
+        format="DETAILED",
+        date_format="ISO8601"
+    )
+    logger = settings.create_logger("myapp")
+except ConfigError as e:
+    print(f"Configuration error: {e}")
 ```
 
 ## Available Formats
 
-### Log Formats
+### Log Formats (Enum)
 
-- **DEFAULT**: `"%(message)s"`
-- **SIMPLE**: `"%(levelname)s: %(message)s"`
-- **VERBOSE**: `"%(asctime)s - %(name)s - %(levelname)s - %(message)s"`
-- **DETAILED**: `"%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"`
-- **NOTHING**: `""` (minimal output)
+```python
+from richlog import LogFormat
 
-### Date Formats
+# Available formats:
+LogFormat.DEFAULT   # "%(message)s"
+LogFormat.SIMPLE    # "%(levelname)s: %(message)s"
+LogFormat.VERBOSE   # "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LogFormat.DETAILED  # "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+LogFormat.NOTHING   # "" (minimal output)
 
-- **DEFAULT**: `"%Y-%m-%d %H:%M:%S"`
-- **ISO8601**: `"%Y-%m-%dT%H:%M:%S"`
-- **US**: `"%m/%d/%Y %I:%M:%S %p"`
-- **EU**: `"%d/%m/%Y %H:%M:%S"`
-- **NOTHING**: `""` (no timestamps)
+# Custom formats are also supported
+custom_format = "%(levelname)-8s | %(name)s | %(message)s"
+logger = get_rich_logger("app", log_format=custom_format)
+```
+
+### Date Formats (Enum)
+
+```python
+from richlog import DateFormat
+
+# Available formats:
+DateFormat.DEFAULT  # "%Y-%m-%d %H:%M:%S"
+DateFormat.ISO8601  # "%Y-%m-%dT%H:%M:%S"
+DateFormat.US       # "%m/%d/%Y %I:%M:%S %p"
+DateFormat.EU       # "%d/%m/%Y %H:%M:%S"
+DateFormat.NOTHING  # "" (no timestamps)
+
+# Custom date formats are supported
+custom_date = "%Y年%m月%d日 %H時%M分"
+logger = get_rich_logger("app", date_format=custom_date)
+```
 
 ## Development
 
@@ -244,17 +308,42 @@ richlog/
 │   ├── __init__.py          # Public API
 │   ├── core/                # Core functionality
 │   │   ├── logger.py        # Main logger function
-│   │   ├── formatters.py    # Log and date formats
+│   │   ├── formatters.py    # Log and date format enums
 │   │   └── handlers.py      # Custom handlers
 │   ├── config/              # Configuration management
-│   │   ├── settings.py      # Settings loader
+│   │   ├── settings.py      # Settings with validation
 │   │   └── defaults.py      # Default values
+│   ├── shortcuts.py         # Convenience functions
 │   └── utils/               # Utilities
 │       ├── decorators.py    # Helpful decorators
 │       └── context.py       # Context managers
-├── tests/                   # Test suite
+├── tests/                   # Comprehensive test suite
 ├── .github/workflows/       # CI/CD
 └── pyproject.toml          # Project configuration
+```
+
+## Migration from v0.1.x
+
+The main change in v0.2.0 is the use of Enums for log and date formats:
+
+```python
+# Old way (v0.1.x)
+from richlog import LogFormat
+logger = get_rich_logger("app", log_format=LogFormat.DETAILED)
+
+# New way (v0.2.0) - Same API, but LogFormat is now an Enum
+from richlog import LogFormat
+logger = get_rich_logger("app", log_format=LogFormat.DETAILED)
+
+# New features in v0.2.0
+# 1. Configuration validation
+settings = load_settings()  # Validates log levels
+
+# 2. Easy logger creation from settings
+logger = settings.create_logger("app")
+
+# 3. Shortcuts for common patterns
+logger = setup_rich_logger("app", preset="production")
 ```
 
 ## Contributing

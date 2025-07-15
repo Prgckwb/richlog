@@ -53,13 +53,16 @@ class TestSettings:
 
 class TestLoadSettings:
     def test_load_settings_from_env(self) -> None:
-        with patch.dict(os.environ, {
-            "RICHLOG_LEVEL": "DEBUG",
-            "RICHLOG_FORMAT": "DETAILED",
-            "RICHLOG_DATE_FORMAT": "US",
-            "RICHLOG_RICH_TRACEBACKS": "false",
-            "RICHLOG_TRACEBACK_SUPPRESS": "module1,module2",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "RICHLOG_LEVEL": "DEBUG",
+                "RICHLOG_FORMAT": "DETAILED",
+                "RICHLOG_DATE_FORMAT": "US",
+                "RICHLOG_RICH_TRACEBACKS": "false",
+                "RICHLOG_TRACEBACK_SUPPRESS": "module1,module2",
+            },
+        ):
             settings = load_settings()
             assert settings.level == "DEBUG"
             assert settings.format == "DETAILED"
@@ -96,9 +99,12 @@ format = SIMPLE
 """)
 
         # 環境変数がファイル設定を上書きする
-        with patch.dict(os.environ, {
-            "RICHLOG_LEVEL": "DEBUG",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "RICHLOG_LEVEL": "DEBUG",
+            },
+        ):
             settings = load_settings(config_path=config_file)
             assert settings.level == "DEBUG"  # 環境変数の値
             assert settings.format == "SIMPLE"  # ファイルの値

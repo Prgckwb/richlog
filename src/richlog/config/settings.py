@@ -18,6 +18,14 @@ from richlog.config.defaults import (
     DEFAULT_RICH_TRACEBACKS,
     DEFAULT_TRACEBACK_SUPPRESS,
 )
+from richlog.core import get_rich_logger
+from richlog.core.formatters import DateFormat, LogFormat
+
+
+class ConfigError(Exception):
+    """設定エラー"""
+
+    pass
 
 
 @dataclass
@@ -33,6 +41,17 @@ class Settings:
         if not self.traceback_suppress:
             self.traceback_suppress = DEFAULT_TRACEBACK_SUPPRESS.copy()
 
+        # ログレベルの検証
+        self._validate_log_level()
+
+    def _validate_log_level(self) -> None:
+        """ログレベルの妥当性を検証"""
+        valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+        if self.level.upper() not in valid_levels:
+            raise ConfigError(
+                f"Invalid log level: {self.level}. Valid levels are: {', '.join(valid_levels)}"
+            )
+
     def get_log_level(self) -> int:
         """文字列のログレベルを logging モジュールの定数に変換"""
         level_map = {
@@ -43,6 +62,28 @@ class Settings:
             "CRITICAL": logging.CRITICAL,
         }
         return level_map.get(self.level.upper(), logging.INFO)
+
+    def create_logger(self, name: str) -> logging.Logger:
+        """設定に基づいてロガーを作成"""
+        # フォーマットをEnumに変換
+        try:
+            log_format = LogFormat.from_string(self.format)
+        except ValueError:
+            log_format = LogFormat.DEFAULT
+
+        try:
+            date_format = DateFormat.from_string(self.date_format)
+        except ValueError:
+            date_format = DateFormat.DEFAULT
+
+        return get_rich_logger(
+            name=name,
+            level=self.get_log_level(),
+            log_format=log_format,
+            date_format=date_format,
+            rich_tracebacks=self.rich_tracebacks,
+            traceback_suppress=self.traceback_suppress,
+        )
 
 
 def load_settings(config_path: Optional[Path] = None) -> Settings:
@@ -56,22 +97,34 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
     settings = Settings()
 
     # 設定ファイルから読み込み
-    if config_path and config_path.exists():
-        if config_path.suffix == ".toml":
-            _load_from_toml(config_path, settings)
-        else:
-            _load_from_ini(config_path, settings)
+    if config_path:
+        if not config_path.exists():
+            raise ConfigError(f"Configuration file not found: {config_path}")
+
+        try:
+            if config_path.suffix == ".toml":
+                _load_from_toml(config_path, settings)
+            else:
+                _load_from_ini(config_path, settings)
+        except Exception as e:
+            raise ConfigError(f"Failed to load configuration from {config_path}: {e}") from e
 
     # 環境変数から読み込み(ファイル設定を上書き)
-    _load_from_env(settings)
+    try:
+        _load_from_env(settings)
+    except Exception as e:
+        raise ConfigError(f"Failed to load configuration from environment: {e}") from e
 
     return settings
 
 
 def _load_from_toml(config_path: Path, settings: Settings) -> None:
     """TOMLファイルから設定を読み込む"""
-    with open(config_path, "rb") as f:
-        data = tomllib.load(f)
+    try:
+        with open(config_path, "rb") as f:
+            data = tomllib.load(f)
+    except tomllib.TOMLDecodeError as e:
+        raise ConfigError(f"Invalid TOML format: {e}") from e
 
     if "richlog" in data:
         config = data["richlog"]
@@ -82,11 +135,17 @@ def _load_from_toml(config_path: Path, settings: Settings) -> None:
         if "traceback_suppress" in config:
             settings.traceback_suppress = config["traceback_suppress"]
 
+        # 再検証
+        settings._validate_log_level()
+
 
 def _load_from_ini(config_path: Path, settings: Settings) -> None:
     """INIファイルから設定を読み込む"""
     config = configparser.ConfigParser()
-    config.read(config_path)
+    try:
+        config.read(config_path)
+    except configparser.Error as e:
+        raise ConfigError(f"Invalid INI format: {e}") from e
 
     if "richlog" in config:
         section = config["richlog"]
@@ -99,12 +158,18 @@ def _load_from_ini(config_path: Path, settings: Settings) -> None:
             suppress_str = section.get("traceback_suppress", "")
             settings.traceback_suppress = [s.strip() for s in suppress_str.split(",") if s.strip()]
 
+        # 再検証
+        settings._validate_log_level()
+
 
 def _load_from_env(settings: Settings) -> None:
     """環境変数から設定を読み込む"""
-    settings.level = os.getenv("RICHLOG_LEVEL", settings.level)
-    settings.format = os.getenv("RICHLOG_FORMAT", settings.format)
-    settings.date_format = os.getenv("RICHLOG_DATE_FORMAT", settings.date_format)
+    if level := os.getenv("RICHLOG_LEVEL"):
+        settings.level = level
+    if format_str := os.getenv("RICHLOG_FORMAT"):
+        settings.format = format_str
+    if date_format := os.getenv("RICHLOG_DATE_FORMAT"):
+        settings.date_format = date_format
 
     # ブール値の処理
     tracebacks_env = os.getenv("RICHLOG_RICH_TRACEBACKS")
@@ -115,3 +180,6 @@ def _load_from_env(settings: Settings) -> None:
     suppress_env = os.getenv("RICHLOG_TRACEBACK_SUPPRESS")
     if suppress_env:
         settings.traceback_suppress = [s.strip() for s in suppress_env.split(",") if s.strip()]
+
+    # 再検証
+    settings._validate_log_level()
