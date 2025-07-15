@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.9"
 dependencies = [
     "rich>=13.9.4",
+    "tomli>=2.0.1; python_version < '3.11'",
 ]
 
 [build-system]
@@ -18,9 +19,31 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "richlog",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.8.6",
+    "pre-commit>=3.5.0",
 ]
 
 [tool.uv.sources]
 richlog = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C90", "RUF"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty]
+environment = { python-version = "3.9" }
+rules = [
+    "all",
+]
 
 

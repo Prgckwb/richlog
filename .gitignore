@@ -62,3 +62,12 @@ docs/_build/
 Thumbs.db
 
 .ruff_cache
+
+# uv specific
+.python-version
+
+# richlog specific
+.richlogrc
+richlog.toml
+*.log
+*.log.*

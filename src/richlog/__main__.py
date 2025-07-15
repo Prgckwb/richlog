@@ -12,7 +12,8 @@ from richlog import DateFormat, LogFormat, get_rich_logger
 def display_intro():
     print(
         Panel(
-            "[bold blue]Rich Log Example[/bold blue]\nDemonstrating different logging formats and levels.",
+            "[bold blue]Rich Log Example[/bold blue]\n"
+            "Demonstrating different logging formats and levels.",
             title="Introduction",
         )
     )

@@ -1,89 +1,278 @@
 # RichLog
-![SS_2024-11-19_at_13-43-22](https://github.com/user-attachments/assets/65671ba9-46ce-4963-81c0-dcdbade1d3a7)
 
-RichLog is a Python library for enhanced logging using the rich capabilities of the `rich` library. It facilitates the setup of visually appealing and highly configurable logging for various levels, from simple messages to detailed debugging information complete with timestamps and code paths.
+![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)
+[![CI](https://github.com/prgckwb/richlog/actions/workflows/ci.yml/badge.svg)](https://github.com/prgckwb/richlog/actions/workflows/ci.yml)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+
+RichLog is a powerful Python logging library that enhances your logging experience with the rich capabilities of the `rich` library. It provides beautiful, customizable console output with advanced features for production-ready applications.
 
 ## Features
 
-- Multiple log formats including simple, verbose, and detailed.
-- Configurable date formats, supporting standards like ISO8601 and regional styles.
-- Rich visual output, leveraging the `rich` library for aesthetically pleasing logs.
-- Customizable logging levels and handlers.
+- 🎨 **Beautiful Console Output** - Colorful, formatted logs using the `rich` library
+- 📝 **Multiple Log Formats** - Simple, verbose, detailed, and custom formats
+- 📅 **Flexible Date Formatting** - ISO8601, US, EU, and custom date formats
+- 🔧 **Advanced Handlers** - File rotation, JSON output, async logging, and buffered logging
+- ⚙️ **Configuration Management** - Environment variables and config file support
+- 🎯 **Useful Decorators** - Log execution time and catch errors automatically
+- 🔄 **Context Managers** - Temporarily change log levels within code blocks
+- 🚀 **Production Ready** - Type hints, comprehensive tests, and CI/CD pipeline
 
 ## Installation
 
-You can install RichLog directly from the GitHub repository. Make sure you have `git` installed and use the following command:
+Install RichLog directly from GitHub:
 
 ```bash
 pip install git+https://github.com/prgckwb/richlog.git
 ```
 
-## Usage
+Or using [uv](https://github.com/astral-sh/uv):
 
-RichLog provides an easy-to-use function `get_rich_logger` to configure your loggers. Here’s a basic example:
+```bash
+uv pip install git+https://github.com/prgckwb/richlog.git
+```
+
+## Quick Start
+
+### Basic Usage
 
 ```python
 from richlog import get_rich_logger, LogFormat, DateFormat
 
-# Create a logger with default settings
-logger = get_rich_logger(name="app_logger")
+# Create a simple logger
+logger = get_rich_logger("my_app")
+logger.info("Hello, RichLog!")
 
-# Log a simple message
-logger.info("This is an info log.")
-
-# Create a logger with a detailed format and ISO8601 date format
-detailed_logger = get_rich_logger(
-    name="detailed_logger",
+# Create a detailed logger with custom formatting
+logger = get_rich_logger(
+    name="detailed_app",
     level=logging.DEBUG,
     log_format=LogFormat.DETAILED,
     date_format=DateFormat.ISO8601
 )
 
-# Log various levels of messages
-detailed_logger.debug("This is a debug message.")
-detailed_logger.warning("This is a warning message.")
-detailed_logger.error("This is an error message.")
+logger.debug("Debug information")
+logger.info("Application started")
+logger.warning("This is a warning")
+logger.error("An error occurred")
 ```
 
-## API
+### Advanced Handlers
 
-### `get_rich_logger`
+```python
+from richlog.core.handlers import FileHandler, JSONHandler, AsyncHandler, BufferedHandler
 
-Creates and configures a logger with rich visualization.
+# File handler with rotation
+file_handler = FileHandler(
+    "app.log",
+    max_bytes=10_000_000,  # 10MB
+    backup_count=5
+)
 
-#### Parameters:
+# JSON handler for structured logging
+json_handler = JSONHandler()
 
-- `name` (str): The name of the logger.
-- `level` (int): Logging level (e.g., `INFO`, `DEBUG`). Defaults to `INFO`.
-- `rich_tracebacks` (bool): Enable rich tracebacks for log errors. Defaults to `True`.
-- `traceback_suppress` (Optional[List]): Modules to suppress in tracebacks.
-- `log_format` (Union[str, LogFormat]): Selects the format for logs (options in `LogFormat`).
-- `date_format` (Union[str, DateFormat]): Selects the format for date representation (options in `DateFormat`).
+# Async handler for non-blocking logging
+async_handler = AsyncHandler(base_handler=file_handler)
 
-#### Returns:
+# Buffered handler for batch processing
+buffered_handler = BufferedHandler(
+    base_handler=json_handler,
+    buffer_size=100
+)
 
-- `logging.Logger`: Configured logger instance.
+# Add handlers to your logger
+logger = get_rich_logger("my_app")
+logger.addHandler(json_handler)
+```
 
-## Log Formats Available
+### Decorators
 
-- **DEFAULT:** `"%(message)s"`
-- **VERBOSE:** `"%(asctime)s - %(name)s - %(levelname)s - %(message)s"`
-- **SIMPLE:** `"%(levelname)s: %(message)s"`
-- **DETAILED:** `"%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"`
-- **NOTHING:** `""` (for minimal output)
+```python
+from richlog.utils.decorators import log_execution_time, log_errors
 
-## Date Formats Available
+logger = get_rich_logger("my_app")
 
-- **DEFAULT:** `"%Y-%m-%d %H:%M:%S"`
-- **ISO8601:** `"%Y-%m-%dT%H:%M:%S"`
-- **US:** `"%m/%d/%Y %I:%M:%S %p"`
-- **EU:** `"%d/%m/%Y %H:%M:%S"`
-- **NOTHING:** `""` (for timestamps suppression)
+@log_execution_time(logger=logger)
+def slow_function():
+    time.sleep(1)
+    return "Done!"
 
-## Contribution
+@log_errors(logger=logger, reraise=False)
+def risky_function():
+    raise ValueError("Something went wrong")
+    # Error will be logged but not raised
+```
 
-Contributions are welcome! Please feel free to open issues or submit pull requests for feature enhancements or bug fixes.
+### Context Manager
+
+```python
+from richlog.utils.context import log_context
+import logging
+
+logger = get_rich_logger("my_app", level=logging.INFO)
+
+# Temporarily enable debug logging
+with log_context(logger, level=logging.DEBUG):
+    logger.debug("This debug message will be shown")
+    
+logger.debug("This debug message will NOT be shown")
+```
+
+## Configuration
+
+RichLog supports multiple configuration methods:
+
+### Environment Variables
+
+```bash
+export RICHLOG_LEVEL=DEBUG
+export RICHLOG_FORMAT=DETAILED
+export RICHLOG_DATE_FORMAT=ISO8601
+export RICHLOG_RICH_TRACEBACKS=true
+export RICHLOG_TRACEBACK_SUPPRESS=module1,module2
+```
+
+### Configuration Files
+
+Create a `.richlogrc` or `richlog.toml` file:
+
+**INI format (.richlogrc):**
+```ini
+[richlog]
+level = INFO
+format = VERBOSE
+date_format = ISO8601
+rich_tracebacks = true
+traceback_suppress = pandas,numpy
+```
+
+**TOML format (richlog.toml):**
+```toml
+[richlog]
+level = "INFO"
+format = "VERBOSE"
+date_format = "ISO8601"
+rich_tracebacks = true
+traceback_suppress = ["pandas", "numpy"]
+```
+
+### Loading Configuration
+
+```python
+from richlog.config.settings import load_settings
+from richlog import get_rich_logger
+
+# Load settings from file and environment
+settings = load_settings(config_path=Path(".richlogrc"))
+
+# Create logger with settings
+logger = get_rich_logger(
+    "my_app",
+    level=settings.get_log_level(),
+    log_format=settings.format,
+    date_format=settings.date_format,
+    rich_tracebacks=settings.rich_tracebacks,
+    traceback_suppress=settings.traceback_suppress
+)
+```
+
+## Available Formats
+
+### Log Formats
+
+- **DEFAULT**: `"%(message)s"`
+- **SIMPLE**: `"%(levelname)s: %(message)s"`
+- **VERBOSE**: `"%(asctime)s - %(name)s - %(levelname)s - %(message)s"`
+- **DETAILED**: `"%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"`
+- **NOTHING**: `""` (minimal output)
+
+### Date Formats
+
+- **DEFAULT**: `"%Y-%m-%d %H:%M:%S"`
+- **ISO8601**: `"%Y-%m-%dT%H:%M:%S"`
+- **US**: `"%m/%d/%Y %I:%M:%S %p"`
+- **EU**: `"%d/%m/%Y %H:%M:%S"`
+- **NOTHING**: `""` (no timestamps)
+
+## Development
+
+### Setup Development Environment
+
+```bash
+# Clone the repository
+git clone https://github.com/prgckwb/richlog.git
+cd richlog
+
+# Install with development dependencies
+uv sync --all-extras --dev
+
+# Install pre-commit hooks
+uv run pre-commit install
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=richlog --cov-report=term-missing
+
+# Run specific test file
+uv run pytest tests/core/test_logger.py -v
+```
+
+### Code Quality
+
+```bash
+# Run linting
+uv run ruff check src/ tests/
+
+# Run formatting
+uv run ruff format src/ tests/
+
+# Type checking (when ty is stable)
+uv run ty check src/
+```
+
+## Project Structure
+
+```
+richlog/
+├── src/richlog/
+│   ├── __init__.py          # Public API
+│   ├── core/                # Core functionality
+│   │   ├── logger.py        # Main logger function
+│   │   ├── formatters.py    # Log and date formats
+│   │   └── handlers.py      # Custom handlers
+│   ├── config/              # Configuration management
+│   │   ├── settings.py      # Settings loader
+│   │   └── defaults.py      # Default values
+│   └── utils/               # Utilities
+│       ├── decorators.py    # Helpful decorators
+│       └── context.py       # Context managers
+├── tests/                   # Test suite
+├── .github/workflows/       # CI/CD
+└── pyproject.toml          # Project configuration
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [Rich](https://github.com/Textualize/rich) - For the beautiful console output
+- [Ruff](https://github.com/astral-sh/ruff) - For fast Python linting and formatting
+- [uv](https://github.com/astral-sh/uv) - For modern Python package management
