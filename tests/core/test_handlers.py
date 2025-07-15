@@ -30,13 +30,13 @@ class TestFileHandler:
             handler.setFormatter(logging.Formatter("%(message)s"))
 
             logger = logging.getLogger("test_file_logger")
-            logger.handlers.clear()  # 既存のハンドラーをクリア
+            logger.handlers.clear()  # Clear existing handlers
             logger.addHandler(handler)
             logger.setLevel(logging.INFO)
 
             logger.info("Test message")
             handler.close()
-            logger.removeHandler(handler)  # ハンドラーを削除
+            logger.removeHandler(handler)  # Remove handler
 
             content = Path(f.name).read_text()
             assert "Test message" in content
@@ -51,7 +51,7 @@ class TestJSONHandler:
     def test_formats_log_as_json(self) -> None:
         handler = JSONHandler()
 
-        # JSON形式でログレコードを整形することを確認
+        # Verify log record is formatted as JSON
         record = logging.LogRecord(
             name="test",
             level=logging.INFO,
@@ -85,7 +85,7 @@ class TestJSONHandler:
             exc_info=None,
         )
 
-        # 追加フィールドを設定
+        # Set extra fields
         record.user_id = "123"
         record.request_id = "abc-456"
 
@@ -101,11 +101,11 @@ class TestAsyncHandler:
         base_handler = logging.StreamHandler()
         handler = AsyncHandler(base_handler)
         assert handler is not None
-        # クリーンアップ
+        # Cleanup
         handler.close()
 
     def test_queues_messages(self) -> None:
-        # AsyncHandlerがメッセージをキューに入れることを確認
+        # Verify AsyncHandler queues messages
         base_handler = logging.StreamHandler()
         handler = AsyncHandler(base_handler)
 
@@ -120,14 +120,14 @@ class TestAsyncHandler:
         )
 
         handler.emit(record)
-        # キューにレコードが追加されたことを確認
+        # Verify record was added to queue
         assert not handler.queue.empty()
 
-        # クリーンアップ
+        # Cleanup
         handler.close()
 
     def test_processes_messages_asynchronously(self) -> None:
-        # 非同期処理のテスト(実装により詳細は変わる)
+        # Test for asynchronous processing (details vary by implementation)
         pass
 
 
@@ -141,7 +141,7 @@ class TestBufferedHandler:
         base_handler = logging.StreamHandler()
         handler = BufferedHandler(base_handler, buffer_size=3)
 
-        # バッファサイズ未満のメッセージを送信
+        # Send messages less than buffer size
         for i in range(2):
             record = logging.LogRecord(
                 name="test",
@@ -154,22 +154,22 @@ class TestBufferedHandler:
             )
             handler.emit(record)
 
-        # バッファ内にメッセージが保持されていることを確認
+        # Verify messages are held in buffer
         assert len(handler.buffer) == 2
 
     def test_flushes_on_buffer_full(self) -> None:
-        # バッファがいっぱいになったときにフラッシュされることを確認
+        # Verify flush when buffer is full
         from io import StringIO
 
         stream = StringIO()
         base_handler = logging.StreamHandler(stream)
         base_handler.setFormatter(logging.Formatter("%(message)s"))
-        base_handler.setLevel(logging.DEBUG)  # レベルを明示的に設定
+        base_handler.setLevel(logging.DEBUG)  # Set level explicitly
 
         handler = BufferedHandler(base_handler, buffer_size=2)
-        handler.setLevel(logging.DEBUG)  # レベルを明示的に設定
+        handler.setLevel(logging.DEBUG)  # Set level explicitly
 
-        # バッファサイズ分のメッセージを送信
+        # Send messages up to buffer size
         for i in range(2):
             record = logging.LogRecord(
                 name="test",
@@ -182,10 +182,10 @@ class TestBufferedHandler:
             )
             handler.emit(record)
 
-        # フラッシュされてストリームに書き込まれたことを確認
+        # Verify flushed and written to stream
         output = stream.getvalue()
         assert "Message 0" in output
         assert "Message 1" in output
 
-        # クリーンアップ
+        # Cleanup
         handler.close()

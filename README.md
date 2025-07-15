@@ -254,7 +254,7 @@ DateFormat.EU       # "%d/%m/%Y %H:%M:%S"
 DateFormat.NOTHING  # "" (no timestamps)
 
 # Custom date formats are supported
-custom_date = "%Y年%m月%d日 %H時%M分"
+custom_date = "%Y-%m-%d %I:%M:%S %p"
 logger = get_rich_logger("app", date_format=custom_date)
 ```
 
@@ -320,30 +320,6 @@ richlog/
 ├── tests/                   # Comprehensive test suite
 ├── .github/workflows/       # CI/CD
 └── pyproject.toml          # Project configuration
-```
-
-## Migration from v0.1.x
-
-The main change in v0.2.0 is the use of Enums for log and date formats:
-
-```python
-# Old way (v0.1.x)
-from richlog import LogFormat
-logger = get_rich_logger("app", log_format=LogFormat.DETAILED)
-
-# New way (v0.2.0) - Same API, but LogFormat is now an Enum
-from richlog import LogFormat
-logger = get_rich_logger("app", log_format=LogFormat.DETAILED)
-
-# New features in v0.2.0
-# 1. Configuration validation
-settings = load_settings()  # Validates log levels
-
-# 2. Easy logger creation from settings
-logger = settings.create_logger("app")
-
-# 3. Shortcuts for common patterns
-logger = setup_rich_logger("app", preset="production")
 ```
 
 ## Contributing

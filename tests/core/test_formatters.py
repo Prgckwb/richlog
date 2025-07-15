@@ -22,26 +22,26 @@ class TestLogFormat:
         assert LogFormat.NOTHING == ""
 
     def test_enum_behavior(self) -> None:
-        # Enumとしての振る舞いを確認
+        # Verify enum behavior
         assert LogFormat.DEFAULT.name == "DEFAULT"
         assert LogFormat.DEFAULT.value == "%(message)s"
         assert isinstance(LogFormat.DEFAULT, str)
 
     def test_from_string(self) -> None:
-        # 大文字小文字を区別しない
+        # Case insensitive
         assert LogFormat.from_string("default") == LogFormat.DEFAULT
         assert LogFormat.from_string("DEFAULT") == LogFormat.DEFAULT
         assert LogFormat.from_string("Simple") == LogFormat.SIMPLE
 
     def test_from_string_custom_format(self) -> None:
-        # カスタムフォーマット文字列
+        # Custom format string
         custom = "%(levelname)s | %(message)s"
         result = LogFormat.from_string(custom)
         assert result == custom
         assert isinstance(result, str)
 
     def test_all_formats_available(self) -> None:
-        # すべてのフォーマットが利用可能か確認
+        # Verify all formats are available
         formats = [
             LogFormat.DEFAULT,
             LogFormat.SIMPLE,
@@ -71,26 +71,26 @@ class TestDateFormat:
         assert DateFormat.NOTHING == ""
 
     def test_enum_behavior(self) -> None:
-        # Enumとしての振る舞いを確認
+        # Verify enum behavior
         assert DateFormat.ISO8601.name == "ISO8601"
         assert DateFormat.ISO8601.value == "%Y-%m-%dT%H:%M:%S"
         assert isinstance(DateFormat.ISO8601, str)
 
     def test_from_string(self) -> None:
-        # 大文字小文字を区別しない
+        # Case insensitive
         assert DateFormat.from_string("iso8601") == DateFormat.ISO8601
         assert DateFormat.from_string("ISO8601") == DateFormat.ISO8601
         assert DateFormat.from_string("us") == DateFormat.US
 
     def test_from_string_custom_format(self) -> None:
-        # カスタム日付フォーマット
-        custom = "%Y年%m月%d日 %H時%M分"
+        # Custom date format
+        custom = "%Y-%m-%d %H:%M"
         result = DateFormat.from_string(custom)
         assert result == custom
         assert isinstance(result, str)
 
     def test_all_formats_available(self) -> None:
-        # すべてのフォーマットが利用可能か確認
+        # Verify all formats are available
         formats = [
             DateFormat.DEFAULT,
             DateFormat.ISO8601,

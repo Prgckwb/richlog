@@ -22,5 +22,5 @@ class TestDefaults:
 
     def test_default_traceback_suppress(self) -> None:
         assert DEFAULT_TRACEBACK_SUPPRESS == []
-        # リストが変更可能でないことを確認
+        # Verify list is mutable
         assert isinstance(DEFAULT_TRACEBACK_SUPPRESS, list)

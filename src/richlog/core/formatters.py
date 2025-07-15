@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class LogFormat(str, Enum):
-    """ログフォーマットの定義"""
+    """Log format definitions"""
 
     DEFAULT = "%(message)s"
     SIMPLE = "%(levelname)s: %(message)s"
@@ -21,7 +21,7 @@ class LogFormat(str, Enum):
 
 
 class DateFormat(str, Enum):
-    """日付フォーマットの定義"""
+    """Date format definitions"""
 
     DEFAULT = "%Y-%m-%d %H:%M:%S"
     ISO8601 = "%Y-%m-%dT%H:%M:%S"

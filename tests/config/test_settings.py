@@ -47,7 +47,7 @@ class TestSettings:
 
     def test_get_log_level_invalid(self) -> None:
         settings = Settings(level="INVALID")
-        # デフォルトのINFOレベルが返される
+        # Returns the default INFO level
         assert settings.get_log_level() == logging.INFO
 
 
@@ -71,7 +71,7 @@ class TestLoadSettings:
             assert settings.traceback_suppress == ["module1", "module2"]
 
     def test_load_settings_from_file(self, tmp_path: Path) -> None:
-        # 設定ファイルを作成
+        # Create config file
         config_file = tmp_path / ".richlogrc"
         config_file.write_text("""
 [richlog]
@@ -90,7 +90,7 @@ traceback_suppress = package1,package2
         assert settings.traceback_suppress == ["package1", "package2"]
 
     def test_load_settings_env_overrides_file(self, tmp_path: Path) -> None:
-        # 設定ファイルを作成
+        # Create config file
         config_file = tmp_path / ".richlogrc"
         config_file.write_text("""
 [richlog]
@@ -98,7 +98,7 @@ level = ERROR
 format = SIMPLE
 """)
 
-        # 環境変数がファイル設定を上書きする
+        # Environment variables override file settings
         with patch.dict(
             os.environ,
             {
@@ -106,19 +106,19 @@ format = SIMPLE
             },
         ):
             settings = load_settings(config_path=config_file)
-            assert settings.level == "DEBUG"  # 環境変数の値
-            assert settings.format == "SIMPLE"  # ファイルの値
+            assert settings.level == "DEBUG"  # Value from environment variable
+            assert settings.format == "SIMPLE"  # Value from file
 
     def test_load_settings_no_config(self) -> None:
-        # 環境変数をクリア
+        # Clear environment variables
         with patch.dict(os.environ, clear=True):
             settings = load_settings()
-            # デフォルト値が使用される
+            # Default values are used
             assert settings.level == "INFO"
             assert settings.format == "DEFAULT"
 
     def test_load_settings_toml_format(self, tmp_path: Path) -> None:
-        # TOMLファイルでの設定
+        # Configuration in TOML file
         config_file = tmp_path / "richlog.toml"
         config_file.write_text("""
 [richlog]

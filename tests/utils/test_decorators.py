@@ -9,7 +9,7 @@ from richlog.utils.decorators import log_errors, log_execution_time
 
 class TestLogExecutionTime:
     def test_logs_execution_time(self) -> None:
-        # ロガーをモック
+        # Mock the logger
         mock_logger = Mock()
 
         @log_execution_time(logger=mock_logger)
@@ -20,10 +20,10 @@ class TestLogExecutionTime:
         result = slow_function()
 
         assert result == "done"
-        # logメソッドが呼ばれたことを確認
+        # Verify log method was called
         mock_logger.log.assert_called_once()
         call_args = mock_logger.log.call_args
-        assert call_args[0][0] == logging.INFO  # ログレベル
+        assert call_args[0][0] == logging.INFO  # Log level
         log_message = call_args[0][1]
         assert "slow_function" in log_message
         assert "took" in log_message
@@ -39,7 +39,7 @@ class TestLogExecutionTime:
         result = test_function()
 
         assert result == 42
-        # logメソッドがDEBUGレベルで呼ばれたことを確認
+        # Verify log method was called with DEBUG level
         mock_logger.log.assert_called_once()
         assert mock_logger.log.call_args[0][0] == logging.DEBUG
 
@@ -77,7 +77,7 @@ class TestLogErrors:
         with pytest.raises(ValueError):
             failing_function()
 
-        # logメソッドがERRORレベルで呼ばれたことを確認
+        # Verify log method was called with ERROR level
         mock_logger.log.assert_called_once()
         log_args = mock_logger.log.call_args
         assert log_args[0][0] == logging.ERROR
@@ -94,7 +94,7 @@ class TestLogErrors:
         with pytest.raises(RuntimeError):
             failing_function()
 
-        # logメソッドがWARNINGレベルで呼ばれたことを確認
+        # Verify log method was called with WARNING level
         mock_logger.log.assert_called_once()
         assert mock_logger.log.call_args[0][0] == logging.WARNING
 
@@ -108,7 +108,7 @@ class TestLogErrors:
         result = successful_function()
 
         assert result == "success"
-        # ログが記録されていないことを確認
+        # Verify no log was recorded
         mock_logger.log.assert_not_called()
 
     def test_reraises_exception(self) -> None:
@@ -128,7 +128,7 @@ class TestLogErrors:
         def failing_function() -> None:
             raise ValueError("Suppressed error")
 
-        # 例外が抑制される
+        # Exception is suppressed
         result = failing_function()
         assert result is None
         mock_logger.log.assert_called_once()

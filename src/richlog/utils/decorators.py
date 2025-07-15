@@ -10,14 +10,14 @@ def log_execution_time(
     logger: logging.Logger,
     level: int = logging.INFO,
 ) -> Callable[[F], F]:
-    """関数の実行時間をログに記録するデコレータ
+    """Decorator that logs function execution time.
 
     Args:
-        logger: ログを記録するロガー
-        level: ログレベル(デフォルトはINFO)
+        logger: Logger to record the log
+        level: Log level (defaults to INFO)
 
     Returns:
-        デコレートされた関数
+        Decorated function
     """
 
     def decorator(func: F) -> F:
@@ -45,15 +45,15 @@ def log_errors(
     level: int = logging.ERROR,
     reraise: bool = True,
 ) -> Callable[[F], F]:
-    """関数内で発生した例外をログに記録するデコレータ
+    """Decorator that logs exceptions raised within a function.
 
     Args:
-        logger: ログを記録するロガー
-        level: ログレベル(デフォルトはERROR)
-        reraise: 例外を再発生させるかどうか(デフォルトはTrue)
+        logger: Logger to record the log
+        level: Log level (defaults to ERROR)
+        reraise: Whether to re-raise the exception (defaults to True)
 
     Returns:
-        デコレートされた関数
+        Decorated function
     """
 
     def decorator(func: F) -> F:
@@ -64,7 +64,7 @@ def log_errors(
             except Exception as e:
                 logger.log(
                     level,
-                    f"Error in {func.__name__}: {type(e).__name__}: {e!s}",
+                    f"Error in {getattr(func, '__name__', 'unknown')}: {type(e).__name__}: {e!s}",
                     exc_info=True,
                 )
                 if reraise:

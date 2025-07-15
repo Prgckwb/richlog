@@ -8,7 +8,7 @@ from typing import Optional
 try:
     import tomllib
 except ImportError:
-    # Python 3.10以前の場合
+    # For Python 3.10 and earlier
     import tomli as tomllib  # type: ignore
 
 from richlog.config.defaults import (
@@ -23,7 +23,7 @@ from richlog.core.formatters import DateFormat, LogFormat
 
 
 class ConfigError(Exception):
-    """設定エラー"""
+    """Configuration error"""
 
     pass
 
@@ -76,8 +76,8 @@ class Settings:
         return level_map.get(self.level.upper(), logging.INFO)
 
     def create_logger(self, name: str) -> logging.Logger:
-        """設定に基づいてロガーを作成"""
-        # フォーマットをEnumに変換
+        """Create logger based on settings"""
+        # Convert format to Enum
         try:
             log_format = LogFormat.from_string(self.format)
         except ValueError:
@@ -99,16 +99,16 @@ class Settings:
 
 
 def load_settings(config_path: Optional[Path] = None) -> Settings:
-    """設定をファイルと環境変数から読み込む
+    """Load settings from file and environment variables
 
-    優先順位:
-    1. 環境変数
-    2. 設定ファイル(指定されている場合)
-    3. デフォルト値
+    Priority order:
+    1. Environment variables
+    2. Configuration file (if specified)
+    3. Default values
     """
     settings = Settings()
 
-    # 設定ファイルから読み込み
+    # Load from configuration file
     if config_path:
         if not config_path.exists():
             raise ConfigError(f"Configuration file not found: {config_path}")
@@ -134,7 +134,7 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
 
 
 def _load_from_toml(config_path: Path, settings: Settings) -> None:
-    """TOMLファイルから設定を読み込む"""
+    """Load settings from TOML file"""
     try:
         with open(config_path, "rb") as f:
             data = tomllib.load(f)
@@ -150,12 +150,12 @@ def _load_from_toml(config_path: Path, settings: Settings) -> None:
         if "traceback_suppress" in config:
             settings.traceback_suppress = config["traceback_suppress"]
 
-        # 再検証
+        # Re-validate
         settings._validate_log_level()
 
 
 def _load_from_ini(config_path: Path, settings: Settings) -> None:
-    """INIファイルから設定を読み込む"""
+    """Load settings from INI file"""
     config = configparser.ConfigParser()
     try:
         config.read(config_path)
@@ -169,16 +169,16 @@ def _load_from_ini(config_path: Path, settings: Settings) -> None:
         settings.date_format = section.get("date_format", settings.date_format)
         settings.rich_tracebacks = section.getboolean("rich_tracebacks", settings.rich_tracebacks)
         if "traceback_suppress" in section:
-            # カンマ区切りの文字列をリストに変換
+            # Convert comma-separated string to list
             suppress_str = section.get("traceback_suppress", "")
             settings.traceback_suppress = [s.strip() for s in suppress_str.split(",") if s.strip()]
 
-        # 再検証
+        # Re-validate
         settings._validate_log_level()
 
 
 def _load_from_env(settings: Settings) -> None:
-    """環境変数から設定を読み込む"""
+    """Load settings from environment variables"""
     if level := os.getenv("RICHLOG_LEVEL"):
         settings.level = level
     if format_str := os.getenv("RICHLOG_FORMAT"):
@@ -186,12 +186,12 @@ def _load_from_env(settings: Settings) -> None:
     if date_format := os.getenv("RICHLOG_DATE_FORMAT"):
         settings.date_format = date_format
 
-    # ブール値の処理
+    # Handle boolean values
     tracebacks_env = os.getenv("RICHLOG_RICH_TRACEBACKS")
     if tracebacks_env is not None:
         settings.rich_tracebacks = tracebacks_env.lower() in ("true", "1", "yes", "on")
 
-    # リストの処理
+    # Handle list values
     suppress_env = os.getenv("RICHLOG_TRACEBACK_SUPPRESS")
     if suppress_env:
         settings.traceback_suppress = [s.strip() for s in suppress_env.split(",") if s.strip()]

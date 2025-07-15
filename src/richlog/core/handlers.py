@@ -29,7 +29,7 @@ class FileHandler(RotatingFileHandler):
 
 class JSONHandler(logging.Handler):
     def format(self, record: logging.LogRecord) -> str:
-        # 基本的なフィールド
+        # Basic fields
         log_data: dict[str, Any] = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "name": record.name,
@@ -43,11 +43,11 @@ class JSONHandler(logging.Handler):
             "process": record.process,
         }
 
-        # エラー情報があれば追加
+        # Add error information if available
         if record.exc_info:
             log_data["exc_info"] = self.formatException(record.exc_info)
 
-        # 追加のフィールドを抽出
+        # Extract additional fields
         extra_fields = {}
         for key, value in record.__dict__.items():
             if key not in {
@@ -95,7 +95,7 @@ class AsyncHandler(logging.Handler):
         try:
             self.queue.put_nowait(record)
         except queue.Full:
-            # キューがいっぱいの場合は、ログを落とす
+            # Drop the log if queue is full
             pass
 
     def _worker(self) -> None:
@@ -107,7 +107,7 @@ class AsyncHandler(logging.Handler):
             except queue.Empty:
                 continue
             except Exception:
-                # エラーが発生してもワーカーは停止しない
+                # Worker continues even if error occurs
                 pass
 
     def close(self) -> None:
@@ -139,7 +139,7 @@ class BufferedHandler(logging.Handler):
             records_to_flush = self.buffer.copy()
             self.buffer.clear()
 
-        # ロックの外でemitを呼び出す
+        # Call emit outside the lock
         for record in records_to_flush:
             self.base_handler.emit(record)
 

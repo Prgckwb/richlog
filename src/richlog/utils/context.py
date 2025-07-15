@@ -9,33 +9,33 @@ def log_context(
     logger: Union[str, logging.Logger],
     level: int,
 ) -> Generator[None, None, None]:
-    """一時的にログレベルを変更するコンテキストマネージャー
+    """Context manager to temporarily change log level.
 
     Args:
-        logger: ロガー名またはロガーインスタンス
-        level: 設定するログレベル
+        logger: Logger name or logger instance
+        level: Log level to set
 
     Yields:
         None
 
     Example:
         >>> with log_context("myapp", logging.DEBUG):
-        ...     # このブロック内ではDEBUGレベルでログが出力される
+        ...     # Logs are output at DEBUG level within this block
         ...     logger.debug("Debug message")
     """
-    # ロガーインスタンスを取得
+    # Get logger instance
     if isinstance(logger, str):
         logger_instance = logging.getLogger(logger)
     else:
         logger_instance = logger
 
-    # 元のレベルを保存
+    # Save original level
     original_level = logger_instance.level
 
     try:
-        # 新しいレベルを設定
+        # Set new level
         logger_instance.setLevel(level)
         yield
     finally:
-        # 元のレベルに戻す
+        # Restore original level
         logger_instance.setLevel(original_level)

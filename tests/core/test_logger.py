@@ -31,7 +31,7 @@ class TestGetRichLogger:
         logger = get_rich_logger("duplicate_test")
         initial_handler_count = len(logger.handlers)
 
-        # 同じ名前でロガーを再作成
+        # Recreate logger with the same name
         logger = get_rich_logger("duplicate_test")
         assert len(logger.handlers) == initial_handler_count
 
@@ -47,7 +47,7 @@ class TestGetRichLogger:
             traceback_suppress=["module1", "module2"],
         )
 
-        # RichHandlerが正しい引数で呼ばれたことを確認
+        # Verify RichHandler was called with correct arguments
         mock_rich_handler_class.assert_called_once_with(
             show_time=True,
             show_level=True,
@@ -57,7 +57,7 @@ class TestGetRichLogger:
             tracebacks_suppress=["module1", "module2"],
         )
 
-        # ハンドラーのレベルが設定されたことを確認
+        # Verify handler level was set
         mock_handler.setLevel.assert_called_once_with(logging.WARNING)
 
     def test_formatter_is_set_correctly(self) -> None:
@@ -68,7 +68,7 @@ class TestGetRichLogger:
         handler = logger.handlers[0]
         formatter = handler.formatter
 
-        # フォーマッターが設定されていることを確認
+        # Verify formatter is set
         assert formatter is not None
         assert formatter._fmt == "%(levelname)s: %(message)s"
         assert formatter.datefmt == "%Y-%m-%d"

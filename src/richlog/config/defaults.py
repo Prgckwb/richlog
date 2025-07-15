@@ -1,4 +1,4 @@
-# デフォルト設定値
+# Default configuration values
 DEFAULT_LEVEL: str = "INFO"
 DEFAULT_LOG_FORMAT: str = "DEFAULT"
 DEFAULT_DATE_FORMAT: str = "DEFAULT"
