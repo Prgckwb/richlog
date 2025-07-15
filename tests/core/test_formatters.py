@@ -1,5 +1,3 @@
-import pytest
-
 from richlog.core.formatters import DateFormat, LogFormat
 
 

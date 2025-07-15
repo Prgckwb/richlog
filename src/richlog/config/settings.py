@@ -37,23 +37,32 @@ class Settings:
     traceback_suppress: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        # traceback_suppressのデフォルト値を設定
+        # Set default value for traceback_suppress
         if not self.traceback_suppress:
             self.traceback_suppress = DEFAULT_TRACEBACK_SUPPRESS.copy()
 
-        # ログレベルの検証
-        self._validate_log_level()
+    def _validate_log_level(self, raise_on_invalid: bool = True) -> bool:
+        """Validate log level
 
-    def _validate_log_level(self) -> None:
-        """ログレベルの妥当性を検証"""
+        Args:
+            raise_on_invalid: If True, raise ConfigError on invalid level.
+                            If False, return False on invalid level.
+
+        Returns:
+            True if valid, False if invalid (when raise_on_invalid=False)
+        """
         valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
         if self.level.upper() not in valid_levels:
-            raise ConfigError(
-                f"Invalid log level: {self.level}. Valid levels are: {', '.join(valid_levels)}"
-            )
+            if raise_on_invalid:
+                raise ConfigError(
+                    f"Invalid log level: {self.level}. "
+                    f"Valid levels are: {', '.join(sorted(valid_levels))}"
+                )
+            return False
+        return True
 
     def get_log_level(self) -> int:
-        """文字列のログレベルを logging モジュールの定数に変換"""
+        """Convert string log level to logging module constant"""
         level_map = {
             "DEBUG": logging.DEBUG,
             "INFO": logging.INFO,
@@ -61,6 +70,9 @@ class Settings:
             "ERROR": logging.ERROR,
             "CRITICAL": logging.CRITICAL,
         }
+        # Return default INFO level for invalid levels
+        if not self._validate_log_level(raise_on_invalid=False):
+            return logging.INFO
         return level_map.get(self.level.upper(), logging.INFO)
 
     def create_logger(self, name: str) -> logging.Logger:
@@ -109,11 +121,14 @@ def load_settings(config_path: Optional[Path] = None) -> Settings:
         except Exception as e:
             raise ConfigError(f"Failed to load configuration from {config_path}: {e}") from e
 
-    # 環境変数から読み込み(ファイル設定を上書き)
+    # Load from environment variables (overrides file settings)
     try:
         _load_from_env(settings)
     except Exception as e:
         raise ConfigError(f"Failed to load configuration from environment: {e}") from e
+
+    # Validate log level after all settings are loaded
+    settings._validate_log_level(raise_on_invalid=True)
 
     return settings
 

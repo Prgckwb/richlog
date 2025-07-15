@@ -11,13 +11,13 @@ class LogFormat(str, Enum):
     NOTHING = ""
 
     @classmethod
-    def from_string(cls, value: str) -> "LogFormat":
-        """文字列からLogFormatを取得（大文字小文字を区別しない）"""
+    def from_string(cls, value: str) -> str:
+        """Get LogFormat from string (case insensitive) or return custom format"""
         try:
             return cls[value.upper()]
         except KeyError:
-            # カスタムフォーマット文字列の場合はそのまま返す
-            return cls(value)
+            # Return custom format string as-is
+            return value
 
 
 class DateFormat(str, Enum):
@@ -30,10 +30,10 @@ class DateFormat(str, Enum):
     NOTHING = ""
 
     @classmethod
-    def from_string(cls, value: str) -> "DateFormat":
-        """文字列からDateFormatを取得（大文字小文字を区別しない）"""
+    def from_string(cls, value: str) -> str:
+        """Get DateFormat from string (case insensitive) or return custom format"""
         try:
             return cls[value.upper()]
         except KeyError:
-            # カスタムフォーマット文字列の場合はそのまま返す
-            return cls(value)
+            # Return custom format string as-is
+            return value

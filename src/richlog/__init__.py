@@ -9,16 +9,12 @@ Example:
 
 import logging
 
-# Core functionality
-from richlog.core import DateFormat, LogFormat, get_rich_logger
-from richlog.core.handlers import AsyncHandler, BufferedHandler, FileHandler, JSONHandler
-
 # Configuration
 from richlog.config.settings import ConfigError, Settings, load_settings
 
-# Utilities
-from richlog.utils.context import log_context
-from richlog.utils.decorators import log_errors, log_execution_time
+# Core functionality
+from richlog.core import DateFormat, LogFormat, get_rich_logger
+from richlog.core.handlers import AsyncHandler, BufferedHandler, FileHandler, JSONHandler
 
 # Shortcuts
 from richlog.shortcuts import (
@@ -27,6 +23,10 @@ from richlog.shortcuts import (
     setup_json_logger,
     setup_logger_with_preset,
 )
+
+# Utilities
+from richlog.utils.context import log_context
+from richlog.utils.decorators import log_errors, log_execution_time
 
 # Re-export logging levels for convenience
 DEBUG = logging.DEBUG
@@ -38,34 +38,34 @@ CRITICAL = logging.CRITICAL
 __version__ = "0.2.0"
 
 __all__ = [
-    # Version
-    "__version__",
-    # Core
-    "get_rich_logger",
-    "LogFormat",
+    "CRITICAL",
+    # Logging levels
+    "DEBUG",
+    "ERROR",
+    "INFO",
+    "WARNING",
+    "AsyncHandler",
+    "BufferedHandler",
+    "ConfigError",
     "DateFormat",
     # Handlers
     "FileHandler",
     "JSONHandler",
-    "AsyncHandler",
-    "BufferedHandler",
+    "LogFormat",
     # Configuration
     "Settings",
+    # Version
+    "__version__",
+    "configure_from_dict",
+    # Core
+    "get_rich_logger",
     "load_settings",
-    "ConfigError",
+    "log_context",
+    "log_errors",
     # Utilities
     "log_execution_time",
-    "log_errors",
-    "log_context",
-    # Shortcuts
-    "setup_logger_with_preset",
     "setup_file_logger",
     "setup_json_logger",
-    "configure_from_dict",
-    # Logging levels
-    "DEBUG",
-    "INFO",
-    "WARNING",
-    "ERROR",
-    "CRITICAL",
+    # Shortcuts
+    "setup_logger_with_preset",
 ]
