@@ -25,7 +25,7 @@ from richlog.shortcuts import (
     configure_from_dict,
     setup_file_logger,
     setup_json_logger,
-    setup_rich_logger,
+    setup_logger_with_preset,
 )
 
 # Re-export logging levels for convenience
@@ -58,7 +58,7 @@ __all__ = [
     "log_errors",
     "log_context",
     # Shortcuts
-    "setup_rich_logger",
+    "setup_logger_with_preset",
     "setup_file_logger",
     "setup_json_logger",
     "configure_from_dict",
