@@ -341,3 +341,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Rich](https://github.com/Textualize/rich) - For the beautiful console output
 - [Ruff](https://github.com/astral-sh/ruff) - For fast Python linting and formatting
 - [uv](https://github.com/astral-sh/uv) - For modern Python package management
+
+## Citation
+Nothing
